@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Processos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <img src="{{ url_for('static', filename='Logo Principal.png') }}" alt="Logo do Meu Site" class="logo">
+        <h1>Gestão de Processos</h1>
+        <div>
+            <label for="areas">Área:</label>
+            <select id="areas" onchange="loadCargos()">
+                <option value="">Selecione uma área:</option>
+                {% for area in areas %}
+                <option value="{{ area }}">{{ area }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="cargos">Cargo:</label>
+            <select id="cargos" onchange="loadProcessos()">
+                <option value="">Selecione um cargo:</option>
+            </select>
+        </div>
+        <div>
+            <label for="processos">Processo:</label>
+            <select id="processos" onchange="loadDetalhes()">
+                <option value="">Selecione um processo:</option>
+            </select>
+        </div>
+        <div id="detalhes">
+            <h2>Detalhes do Processo:</h2>
+            <ul id="detalhes-list"></ul>
+        </div>
+        <div id="fluxograma" style="display: none;">
+            <h2>Fluxograma do Processo:</h2>
+            <img id="fluxograma-imagem" src="" alt="Fluxograma do Processo">
+        </div>
+    </div>
+    <script>
+        function loadCargos() {
+            var area = $('#areas').val();
+            if (area) {
+                $.getJSON('/cargos/' + area, function(data) {
+                    $('#cargos').empty().append('<option value="">Selecione um cargo:</option>');
+                    $('#processos').empty().append('<option value="">Selecione um processo:</option>');
+                    $('#detalhes-list').empty();
+                    $('#fluxograma').hide();
+                    $.each(data, function(i, item) {
+                        $('#cargos').append('<option value="' + item + '">' + item + '</option>');
+                    });
+                });
+            }
+        }
+
+        function loadProcessos() {
+            var area = $('#areas').val();
+            var cargo = $('#cargos').val();
+            if (area && cargo) {
+                $.getJSON('/processos/' + area + '/' + cargo, function(data) {
+                    $('#processos').empty().append('<option value="">Selecione um processo:</option>');
+                    $('#detalhes-list').empty();
+                    $('#fluxograma').hide();
+                    $.each(data, function(i, item) {
+                        $('#processos').append('<option value="' + item + '">' + item + '</option>');
+                    });
+                });
+            }
+        }
+
+        function loadDetalhes() {
+            var area = $('#areas').val();
+            var cargo = $('#cargos').val();
+            var processo = $('#processos').val();
+            if (area && cargo && processo) {
+                $.getJSON('/detalhes/' + area + '/' + cargo + '/' + processo, function(data) {
+                    $('#detalhes-list').empty();
+                    $.each(data, function(i, item) {
+                        $('#detalhes-list').append('<li>' + item + '</li>');
+                    });
+
+                    $.getJSON('/fluxograma/' + area + '/' + cargo + '/' + processo, function(fluxoData) {
+                        if (fluxoData.fluxograma) {
+                            $('#fluxograma-imagem').attr('src', fluxoData.fluxograma);
+                            $('#fluxograma').show();
+                        } else {
+                            $('#fluxograma').hide();
+                        }
+                    });
+                });
+            }
+        }
+    </script>
+</body>
+</html>
